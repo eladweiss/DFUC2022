@@ -66,7 +66,7 @@ pip install -r requirements.txt
 
 Run:
 ```
-python test.py --rect --weight path/to/weight/or/folder --data_path path/to/testing/data
+python test.py --rect --weight path/to/weight/or/folder --data_path path/to/testing/data --gt_path path/to/ground_truth folder
 
 Optional Args:
 --rect         Padding image to square before resize to keep its aspect ratio
@@ -74,6 +74,7 @@ Optional Args:
 --weight       It can be a weight or a fold. If it's a folder, the result is the mean of each weight result
 --data_path    Path to testing data
 --save_path    Path to save prediction mask
+--gt_path      Path to ground truth. Use this if you want to see final mean-dice. Otherwise you can run evaluate.py manually as described above.
 ```
 
 ### Evaluation
