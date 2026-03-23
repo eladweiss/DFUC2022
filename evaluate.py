@@ -36,6 +36,39 @@ class test_dataset:
             return img.convert('L')
 
 
+def calc_mean_dice(image_root: str, gt_root: str) -> float:
+    """Calculate mean dice between inference and ground-truth."""
+    test_loader = test_dataset(image_root, gt_root)
+    b = 0.0
+
+    for i in range(test_loader.size):
+        image, gt, name = test_loader.load_data()
+        gt = np.asarray(gt, np.float32)
+        gt /= (gt.max() + 1e-8)
+        image = image
+        input = image[0, 1, :, :]
+        input = np.array(input)
+
+        target = np.array(gt)
+        N = gt.shape
+        smooth = 1
+
+        input_flat = np.reshape(input, (-1))
+        target_flat = np.reshape(target, (-1))
+
+        intersection = (input_flat * target_flat)
+
+        loss = (2 * intersection.sum() + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
+        # loss =  loss.sum() / N[1]
+        a = '{:.4f}'.format(loss)
+        a = float(a)
+
+        b = b + a
+        # print( i, a)
+
+    return b / test_loader.size
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_root', type=str, default='/home/u8203550/DFUC/predict/')
@@ -46,36 +79,6 @@ if __name__ == '__main__':
     ##### image_root : your model inference results' path   ###
     ##### gt_root : gt files' path                          ###
     ###########################################################
-    
-    image_root = opt.image_root
-    gt_root = opt.gt_root
+    mean_dice = calc_mean_dice(opt.image_root, opt.gt_root)
+    print('mean dice = ', mean_dice)
 
-    test_loader = test_dataset(image_root, gt_root)
-    b=0.0
-
-    for i in range(test_loader.size):
-        image, gt, name = test_loader.load_data()
-        gt = np.asarray(gt, np.float32)
-        gt /= (gt.max() + 1e-8)
-        image = image
-        input = image[0,1,:,:]
-        input = np.array(input)
-        
-        target = np.array(gt)
-        N = gt.shape
-        smooth = 1
-    
-        input_flat = np.reshape(input,(-1))
-        target_flat = np.reshape(target,(-1))
-        
-        intersection = (input_flat*target_flat)
-
-        loss =  (2 * intersection.sum() + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
-        #loss =  loss.sum() / N[1]
-        a =  '{:.4f}'.format(loss)
-        a = float(a)
-        
-        b = b + a
-        #print( i, a)
-
-    print('mean dice = ', b/test_loader.size)

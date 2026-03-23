@@ -9,9 +9,18 @@ import argparse
 import time
 
 from tqdm import tqdm
+
+from evaluate import calc_mean_dice
 from utils.utils import AvgMeter, square_unpadding, build_model, save_mask, visualize_mask
 from utils.dataloader import test_dataset
 # -
+
+NO_COLOR = '\033[0;0m'
+WHITE_BOLD = '\033[0;90m'
+RED_BOLD = '\033[0;91m'
+GREEN_BOLD = '\033[0;92m'
+YELLOW_BOLD = '\033[0;93m'
+
 
 def arg_parser():
     parser = argparse.ArgumentParser()
@@ -24,7 +33,8 @@ def arg_parser():
     parser.add_argument('--tta', type=str, default='', help='testing time augmentation')
     parser.add_argument('--save_path', type=str, default='pred_mask', help='path to save mask')
     parser.add_argument('--data_path', nargs='+', type=str, default='../DFUC2022_val' , help='path to testing data')
-    
+    parser.add_argument('--gt_path', type=str, help='path to ground truth, for score evaluation')
+
     parser.add_argument('--rect', action='store_true', help='padding the image into rectangle')
     parser.add_argument('--visualize', action='store_true', help='visualize the ground truth and prediction on original image')
     parser.add_argument('--threshold', type=float,default=0.5, help='threshold for mask')
@@ -90,7 +100,7 @@ if __name__ == '__main__':
     os.makedirs(opt.save_path, exist_ok=True)
     if opt.visualize:
         os.makedirs(os.path.join(opt.save_path, 'vis'), exist_ok=True)
-    
+
     test_data = test_dataset(opt.data_path, opt.test_size, opt.rect)
     model = build_model(opt.modelname, opt.class_num, opt.arch)
     
@@ -100,7 +110,7 @@ if __name__ == '__main__':
             if '.pth' in w:
                 weightlist.append(os.path.join(weight, w))
         opt.weight = weightlist
-    
+
     fold_result = None
     fold = len(opt.weight)
     for k, weight in enumerate(opt.weight):
@@ -111,3 +121,7 @@ if __name__ == '__main__':
             model.load_state_dict(torch.load(weight, map_location=torch.device('cpu')))
         model.eval()
         fold_result = test(model, test_data, fold_result, opt.tta, opt.rect, fold, k, opt.visualize, opt.save_path, opt.threshold)
+
+    if opt.gt_path:
+        mean_dice = calc_mean_dice(opt.save_path, opt.gt_path)
+        print(YELLOW_BOLD, 'Mean dice:', mean_dice, NO_COLOR)
