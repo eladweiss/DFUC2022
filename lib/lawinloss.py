@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from mmcv.cnn import ConvModule, NonLocal2d
 
 from einops import rearrange
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 import math
 
 # https://github.com/yan-hao-tian/lawin/blob/main/lawin_head.py
