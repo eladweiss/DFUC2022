@@ -240,7 +240,10 @@ class KingNet(nn.Module):
             if not os.path.isfile(weight_file):
                 print(weight_file, 'is not found')
                 exit(0)
-            weights = torch.load(weight_file)
+            if torch.cuda.is_available():
+                weights = torch.load(weight_file, weights_only=False)
+            else:
+                weights = torch.load(weight_file, map_location=torch.device('cpu'), weights_only=False)
             state_dict=weights["state_dict"]
             new_state_dict = OrderedDict()
             for k, v in state_dict.items():

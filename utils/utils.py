@@ -64,11 +64,16 @@ class AvgMeter(object):
 def build_model(modelname='lawinloss4', class_num=1, arch=53):
     print('model:', modelname)
     if modelname == 'lawinloss':
-        model = KingMSEG_lawin_loss(class_num=class_num).cuda()
+        model = KingMSEG_lawin_loss(class_num=class_num)
     elif modelname == 'lawinloss4':
-        model = KingMSEG_lawin_loss4(class_num=class_num).cuda()
+        model = KingMSEG_lawin_loss4(class_num=class_num)
+    else:
+        raise RuntimeError(f'Unknown model: {modelname}.')
 
+    if torch.cuda.is_available():
+        model = model.cuda()
     return model
+
 
 class confusion_matrix():
     """ confusion matrix

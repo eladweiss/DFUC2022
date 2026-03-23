@@ -39,9 +39,11 @@ def test(model, test_data, fold_result, tta, rect, fold, k, visualize, save_path
     vis_path = os.path.join(opt.save_path, 'vis')
     
     for i, (image, name, shape, img) in pbar:
-        image = image.cuda()
-        
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            image = image.cuda()
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         start_time = time.perf_counter()
         with torch.no_grad():
             output = model(image)
@@ -60,8 +62,9 @@ def test(model, test_data, fold_result, tta, rect, fold, k, visualize, save_path
         
         output = nn.Tanh()(output).squeeze().cpu().numpy()
         output = (output - output.min()) / (output.max() - output.min() + 1e-16)
-        
-        torch.cuda.synchronize()
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         elapsed_time = time.perf_counter() - start_time
         FPS.update(1/elapsed_time, 1)
         
@@ -102,6 +105,9 @@ if __name__ == '__main__':
     fold = len(opt.weight)
     for k, weight in enumerate(opt.weight):
         print('Test %gth weight'%(k+1), weight)
-        model.load_state_dict(torch.load(weight))
+        if torch.cuda.is_available():
+            model.load_state_dict(torch.load(weight))
+        else:
+            model.load_state_dict(torch.load(weight, map_location=torch.device('cpu')))
         model.eval()
         fold_result = test(model, test_data, fold_result, opt.tta, opt.rect, fold, k, opt.visualize, opt.save_path, opt.threshold)
